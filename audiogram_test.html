@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Audiogram</title>
+    <!-- <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script> -->
+    <script src = "jquery.min.js" type="text/javascript"></script>
+    <script src = "jspsych-5.0.3/jspsych.js" type="text/javascript"></script>
+    <script src = "jspsych-5.0.3/plugins/jspsych-instructions.js" type="text/javascript"></script>
+    <script src = "jspsych-5.0.3/plugins/jspsych-single-audio-ends-trial.js" type="text/javascript"></script>
+    <script src = "jspsych-5.0.3/plugins/jspsych-button-response.js"></script>
+    <!-- <script src = "/jspsych-5.0.3/plugins/jspsych-text.js" type="text/javascript"></script> -->
+    <script src = "jspsych-5.0.3/plugins/jspsych-single-stim.js" type="text/javascript"></script>
+    <!-- <script src = "/PapaParse-4.1.2/papaparse.min.js"></script> -->
+    <link rel="stylesheet" type="text/css" href="jspsych-5.0.3/css/jspsych.css">
+    <!-- <script src="/assets/javascripts/jatos.js"></script> -->
+</head>
+<body>
+</body>
+<script type="text/javascript">
+//jatos.onLoad(function() {
+
+    // get trial data from JATOS JSON input
+    //var trial_obj = jatos.studyJsonInput[0].trial_data; // when running through JATOS
+    var trial_data_all = [{
+        "frequency": "500", 
+        "trial_data": [
+        {
+            "soundNumber": 1,
+            "dbReduction": 0,
+            "fileName": "500.mp3",
+        },
+        {
+            "soundNumber": 2,
+            "dbReduction": 5,
+            "fileName": "500_5.mp3",
+        },
+        {
+            "soundNumber": 3,
+            "dbReduction": 10,
+            "fileName": "500_10.mp3",
+        },
+        {
+            "soundNumber": 4,
+            "dbReduction": 15,
+            "fileName": "500_15.mp3",
+        },
+        {
+            "soundNumber": 5,
+            "dbReduction": 20,
+            "fileName": "500_20.mp3",
+        },
+        {
+            "soundNumber": 6,
+            "dbReduction": 25,
+            "fileName": "500_25.mp3",
+        },
+        {
+            "soundNumber": 7,
+            "dbReduction": 30,
+            "fileName": "500_30.mp3",
+        },
+        {
+            "soundNumber": 8,
+            "dbReduction": 35,
+            "fileName": "500_35.mp3",
+        },
+        {
+            "soundNumber": 9,
+            "dbReduction": 40,
+            "fileName": "500_40.mp3",
+        },
+        {
+            "soundNumber": 10,
+            "dbReduction": 45,
+            "fileName": "500_45.mp3",
+        },
+        {
+            "soundNumber": 11,
+            "dbReduction": 50,
+            "fileName": "500_50.mp3",
+        },
+        {
+            "soundNumber": 12,
+            "dbReduction": 55,
+            "fileName": "500_55.mp3",
+        },
+        {
+            "soundNumber": 13,
+            "dbReduction": 60,
+            "fileName": "500_60.mp3",
+        },
+        {
+            "soundNumber": 14,
+            "dbReduction": 65,
+            "fileName": "500_65.mp3",
+        },
+        {
+            "soundNumber": 15,
+            "dbReduction": 70,
+            "fileName": "500_70.mp3",
+        },
+        {
+            "soundNumber": 16,
+            "dbReduction": 75,
+            "fileName": "500_75.mp3",
+        },
+        {
+            "soundNumber": 17,
+            "dbReduction": 80,
+            "fileName": "500_80.mp3",
+        },
+        {
+            "soundNumber": 18,
+            "dbReduction": 85,
+            "fileName": "500_85.mp3",
+        },
+        {
+            "soundNumber": 19,
+            "dbReduction": 90,
+            "fileName": "500_90.mp3",
+        },
+        {
+            "soundNumber": 20,
+            "dbReduction": "NA",
+            "fileName": "silence.mp3",
+        }]
+    }];
+
+    var trial_obj = trial_data_all[0].trial_data;
+    var file_path = "audio/"; // change to var file_path = "/study_assets/"; when switching to JATOS
+
+    // add the JATOS properties to the data
+    // jsPsych.data.addProperties({
+    //     jatos_study_ID: jatos.studyId,
+    //     jatos_component_ID: jatos.componentId,
+    //     jatos_component_result_ID: jatos.componentResultId,
+    //     jatos_result_ID_URL: jsPsych.data.getURLVariable('srid')
+    // });
+
+    // audiogram instructions - press button when you hear tone, otherwise do nothing
+    var start_task = {
+        type: 'instructions',
+        pages: ['<p>You will hear a series of tones, presented at different levels and frequencies.<br><br>' + 
+            'Whenever you hear a tone, press the "Tone" button.<br><br>We do not expect you to hear all the tones ' +
+            '- some will be too quiet to hear, and if this is the case then you should NOT press the button.' + 
+            '<br><br>This task will take a few minutes to complete.<br><br>' +
+            'When you are ready, please press the "Next" button to start.</p>'],
+        show_clickable_nav: true,
+        timing_post_trial: 1000,
+        data: {task_segment: 'instructions'}
+    }
+
+    // function for generating the stimulus HTML (HTML5 audio tag and prompt text) on each trial
+    function getAudioHtml(index) {
+        var audio_file_name = [file_path, trial_obj[index].fileName].join("");
+        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+        return htmlString;
+    }
+
+    // first 'button-response' trial is just to start the task, so that the participant knows where the button will be on the screen
+    var trial_start = {
+        type: 'button-response',
+        is_html: true,
+        choices: ['Start'],
+        button_html: "<button class='jspsych-btn'>Start</button>", 
+        timing_stim: -1,
+        timing_response: -1,
+        response_ends_trial: true,
+        stimulus: "<div><p>Please press the 'Start' button to start.</p></div>",
+        data: {task_segment: 'trial_start'}
+    }
+
+    // silent trial to start the task - catch trial, and decouples 1st appearance of Tone button with 1st tone presentation
+    var last_audio_index = trial_obj.length - 1;
+    var silent_trial = {
+        type: 'button-response',
+        is_html: true,
+        choices: ['Tone'],
+        button_html: "<button class='jspsych-btn'>Start</button>", 
+        timing_stim: 1500,
+        timing_response: 1500,
+        response_ends_trial: false,
+        data: trial_obj[last_audio_index],
+        stimulus: [getAudioHtml(last_audio_index)],
+        timing_post_trial: 0,
+        on_finish: function(data) {
+            var response_type = "failed_catch";
+            // -1 = no button press, didn't hear silent tone, correct, 0 = button pressed, heard silent tone, incorrect
+            if (data.button_pressed == -1) { 
+                response_type = "correct_miss";
+            }
+            jsPsych.data.addDataToLastTrial({response_type: response_type, trial_segment: 'audio_test_catch', task_segment: 'audio_test_main'}); 
+        }
+    }
+
+    // create array of objects (parameter key value pairs) for the audio trial nested timeline
+    // -array consists of every other tone in decending order, then every tone in ascending order
+    // -parameters that change on each trial: data, stimulus
+    // -stimulus HTML is generated by a function
+    // -the experiment 'on_trial_start' function checks the data for last trial block and response type, and determines
+    //  if the next trial should be skipped (jsPsych.finishTrial)
+
+    var trial_array = [];
+    // create first set of audio trials in a loop. Decrease by 10 db (2 sounds in the trial object array, as these sounds decrease by 5 db)
+    for (var i=0; i < trial_obj.length; i+=2) {
+        var audio_trial = {
+            type: 'button-response',
+            is_html: true,
+            choices: ['Tone'],
+            button_html: "<button class='jspsych-btn'>Tone</button>", 
+            timing_stim: 2000,
+            timing_response: 2000,
+            response_ends_trial: false,
+            data: trial_obj[i],
+            stimulus: [getAudioHtml(i)],
+            timing_post_trial: 0,
+            on_finish: function(data) {
+                var response_type = "miss";
+                if (data.button_pressed == 0) { // 0 = 'Tone' button pressed, heard tone
+                    response_type = "hit"
+                } 
+                jsPsych.data.addDataToLastTrial({response_type: response_type, trial_segment: 'audio_test_response', task_segment: 'audio_test_main'});
+                if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
+                    jsPsych.endCurrentTimeline();
+                }
+            }
+        }
+        trial_array.push([audio_trial]);
+    }
+
+    // create second set of audio trials in a loop. These increase by 5 db (1 sound in the trial object array), and will start at the first sound that the participant missed in the decreasing db set. 
+    var trial_array_up = [];
+    for (var i = trial_obj.length-1; i >= 0; i--) {
+        var audio_trial_up = {
+            type: 'button-response',
+            is_html: true,
+            choices: ['Tone'],
+            button_html: "<button class='jspsych-btn'>Tone</button>", 
+            timing_stim: 2000,
+            timing_response: 2000,
+            response_ends_trial: false,
+            data: trial_obj[i],
+            stimulus: [getAudioHtml(i)],
+            timing_post_trial: 0,
+            on_finish: function(data) {
+                var response_type = "miss";
+                if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
+                    jsPsych.data.addDataToLastTrial({response_type: response_type, 
+                        trial_segment: 'audio_test_response', task_segment: 'audio_test_main_up'});
+                }
+                if (data.button_pressed == 0) { // 0 = 'Tone' button pressed, heard tone
+                    response_type = "hit"
+                    var final_audio_data = jsPsych.data.getLastTrialData();
+                    final_audio_sound_num = final_audio_data.soundNumber;
+                    jsPsych.data.addDataToLastTrial({response_type: response_type, 
+                        trial_segment: 'audio_test_response', 
+                        task_segment: 'audio_test_main_up', 
+                        final_audio_sound_number: final_audio_sound_num});
+                    jsPsych.endCurrentTimeline();
+                }
+            }
+        }
+        trial_array_up.push([audio_trial_up]);
+    }
+
+    // flatten main task arrays
+    var trial_array_flat = [].concat.apply([], trial_array);
+    var trial_array_up_flat = [].concat.apply([], trial_array_up);
+    console.log(JSON.stringify(trial_array_up_flat, null, "  "));
+    // create whole timeline 
+    var timeline = [start_task, trial_start, silent_trial, trial_array_flat, trial_array_up_flat];
+    // flatten whole timeline
+    var timelineFlat = [].concat.apply([],timeline);
+
+    // function called at the start of all trials. This is used only in the 2nd audio blocks (with increasing levels) to check whether or not the trial should be skipped. The trials will skip until reaching the sound that was not heard in the 1st audio block (with decreading levels)
+    function getFirstMissedAudio() {
+        var all_data = jsPsych.data.getData();
+        console.log(all_data);
+        var last_trial_index = all_data.length - 1;
+        console.log(last_trial_index);
+        // if (all_data[last_trial_index].task_segment == "audio_test_main_up") {
+        //      // check whether this sound number is greater than or equal to that from the last trial in the 
+                // previous block (i.e. the first sound that was not heard when the tone levels were decreasing)
+                // if no = end trial with 'jsPsych.finishTrial()', if yes = do nothing
+        // }
+    }
+
+    // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
+    // then start experiment when files are finished loading
+    var sound_files = [];
+    for (var trial of trial_data_all[0].trial_data) {
+        sound_files.push([file_path, trial.fileName].join(""));
+    }
+    jsPsych.pluginAPI.preloadAudioFiles(sound_files, function(){startExperiment();});
+
+    function startExperiment() {
+        jsPsych.init({
+            timeline: timelineFlat,
+            fullscreen: false,
+            default_iti: 0,
+            show_progress_bar: false,
+            on_trial_start: getFirstMissedAudio,
+            on_finish: function() {
+                jsPsych.data.displayData('json');
+                //var resultJson = JSON.stringify(jsPsych.data.getData());
+                //jatos.submitResultData(resultJson, jatos.startNextComponent);
+            }
+        });
+    }
+//});
+</script>
+</html>
