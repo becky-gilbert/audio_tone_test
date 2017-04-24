@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<html>
 <head>
     <meta charset="utf-8">
     <title>Audiogram</title>
@@ -39,7 +38,7 @@
         {
             "soundNumber": 3,
             "dbReduction": 10,
-            "fileName": "500_10.mp3",
+            "fileName": "500_10.mp3", 	 	
         },
         {
             "soundNumber": 4,
@@ -216,10 +215,15 @@
                 response_type = "hit"
             } 
             jsPsych.data.addDataToLastTrial({response_type: response_type, 
-                trial_segment: 'audio_test_response', task_segment: 'audio_test_main'});
-            // if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
-                //jsPsych.endCurrentTimeline();
-            // }
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main'});
+            jsPsych.data.addDataToLastTrial(trial_obj[sound_number_1]);
+            // update the sound and trial numbers
+            // first block, play every 2 sounds in decreasing order (10 dB difference)
+            trial_counter_1+=1;
+	        if ((sound_number_1+2) < trial_obj.length) {
+	        	sound_number_1+=2;
+	        }
         }
     }
 
@@ -227,9 +231,8 @@
     var loop_node_1 = {
         timeline: [audio_trial_1],
         loop_function: function(data) {
-        	console.log("button pressed: ", data[0].button_pressed);
-        	console.log("counter 1: ", trial_counter_1);
             if (data[0].button_pressed == -1) {     // no button pressed, did not hear tone, end this loop
+            	console.log("first missed sound number: ", sound_number_1);
                 return false;
             } else {
                 return true;
@@ -256,10 +259,16 @@
                 response_type = "hit"
             } 
             jsPsych.data.addDataToLastTrial({response_type: response_type, 
-                trial_segment: 'audio_test_response', task_segment: 'audio_test_main'});
-            // if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
-                //jsPsych.endCurrentTimeline();
-            // }
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main'});
+            // store the data for this sound number in the current trial
+    		jsPsych.data.addDataToLastTrial(trial_obj[sound_number_2]);
+            // update the sound and trial numbers
+            // second block, so play every sound in increasing order (5 dB difference)
+            trial_counter_2+=1;
+	        if ((sound_number_2-1) >= 0) {
+	        	sound_number_2-=1;
+	        }
         }
     }
 
@@ -267,9 +276,8 @@
     var loop_node_2 = {
         timeline: [audio_trial_2],
         loop_function: function(data) {
-        	console.log("button pressed: ", data[0].button_pressed);
-        	console.log("counter 1: ", trial_counter_1);
             if (data[0].button_pressed != -1) {     // button pressed, heard tone, end this loop
+            	console.log("first heard sound number: ", sound_number_2);
                 return false;
             } else {
                 return true;
@@ -282,28 +290,28 @@
     function getCurrentAudioHtmlDec() {
         var audio_file_name = [file_path, trial_obj[sound_number_1].fileName].join("");
         htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
-        // first block, play every 2 sounds in decreasing order (10 dB difference)
-        trial_counter_1+=1;
-        if ((sound_number_1+2) < trial_obj.length) {
-        	sound_number_1+=2;
-        }
         return htmlString;
     }
 
     // get next audio HTML increasing by 5 dB
     function getCurrentAudioHtmlInc() {
+    	// 2nd block, so start at the last level that was missed in 1st block
+    	if (trial_counter_2 == trial_obj.length-1) { // first trial in this block
+    		var previous_data = jsPsych.data.getTrialsOfType('button-response');
+    		var last_sound_index = previous_data.length - 2; // last trial is a silent catch trial, so we want the one before that
+    		var last_sound_number = previous_data[last_sound_index].soundNumber;
+    		sound_number_2 = last_sound_number-1; // because the indexing for sound numbers starts at 0
+    		console.log("first missed sound number (get audio function): ", sound_number_2);
+    	}
         var audio_file_name = [file_path, trial_obj[sound_number_2].fileName].join("");
         htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
-        // second block, play every sound in increasing order (5 dB difference)
-        trial_counter_2+=1;
-        if ((sound_number_2-1) >= 0) {
-        	sound_number_2-=1;
-        }
         return htmlString;
     }
 
+    // create the inter-trial intervals (this is created at start of task rather than evaluated on each trial because the evaluation slows the trial loading and causes white-screen gaps/flashes between trials)
+
     // create experiment timeline
-    var timeline = [start_task, trial_start, silent_trial, loop_node_1, loop_node_2];
+    var timeline = [start_task, trial_start, silent_trial, loop_node_1, silent_trial, loop_node_2, silent_trial];
 
     // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
     // then start experiment when files are finished loading
