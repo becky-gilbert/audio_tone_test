@@ -196,37 +196,9 @@
         }
     }
 
-    
-    // // create first set of audio trials in a loop. Decrease by 10 db (2 sounds in the trial object array, as these sounds decrease by 5 db)
-    // var trial_array = [];
-    // for (var i=0; i < trial_obj.length; i+=2) {
-    //     var audio_trial = {
-    //         type: 'button-response',
-    //         is_html: true,
-    //         choices: ['Tone'],
-    //         button_html: "<button class='jspsych-btn'>Tone</button>", 
-    //         timing_stim: 2000,
-    //         timing_response: 2000,
-    //         response_ends_trial: false,
-    //         data: trial_obj[i],
-    //         stimulus: [getAudioHtml(i)],
-    //         timing_post_trial: 0,
-    //         on_finish: function(data) {
-    //             var response_type = "miss";
-    //             if (data.button_pressed == 0) { // 0 = 'Tone' button pressed, heard tone
-    //                 response_type = "hit"
-    //             } 
-    //             jsPsych.data.addDataToLastTrial({response_type: response_type, trial_segment: 'audio_test_response', task_segment: 'audio_test_main'});
-    //             if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
-    //                 jsPsych.endCurrentTimeline();
-    //             }
-    //         }
-    //     }
-    //     trial_array.push([audio_trial]);
-    // }
-
     // create first block trial, with a function as the stimulus parameter, and loop this trial
     var trial_counter_1 = 0;
+    var sound_number_1 = 0; 
     var audio_trial_1 = {
         type: 'button-response',
         is_html: true,
@@ -235,7 +207,7 @@
         timing_stim: 2000,
         timing_response: 2000,
         response_ends_trial: false,
-        stimulus: getCurrentAudioHtml,  // dynamic parameter
+        stimulus: getCurrentAudioHtmlDec,  // dynamic parameter
         timing_post_trial: 0,
         //data: getCurrentTrialData,      // dynamic parameter
         on_finish: function(data) {
@@ -255,6 +227,8 @@
     var loop_node_1 = {
         timeline: [audio_trial_1],
         loop_function: function(data) {
+        	console.log("button pressed: ", data[0].button_pressed);
+        	console.log("counter 1: ", trial_counter_1);
             if (data[0].button_pressed == -1) {     // no button pressed, did not hear tone, end this loop
                 return false;
             } else {
@@ -263,58 +237,80 @@
         }
     }
 
-    function getCurrentAudioHtml() {
-        var audio_file_name = [file_path, trial_obj[trial_counter].fileName].join("");
+    var trial_counter_2 = trial_obj.length-1;
+    var sound_number_2 = trial_obj.length-1;
+    var audio_trial_2 = {
+        type: 'button-response',
+        is_html: true,
+        choices: ['Tone'],
+        button_html: "<button class='jspsych-btn'>Tone</button>", 
+        timing_stim: 2000,
+        timing_response: 2000,
+        response_ends_trial: false,
+        stimulus: getCurrentAudioHtmlInc,  // dynamic parameter
+        timing_post_trial: 0,
+        //data: getCurrentTrialData,      // dynamic parameter
+        on_finish: function(data) {
+            var response_type = "miss";
+            if (data.button_pressed == 0) { // 0 = 'Tone' button pressed, heard tone
+                response_type = "hit"
+            } 
+            jsPsych.data.addDataToLastTrial({response_type: response_type, 
+                trial_segment: 'audio_test_response', task_segment: 'audio_test_main'});
+            // if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
+                //jsPsych.endCurrentTimeline();
+            // }
+        }
+    }
+
+    // loop node for first block (decreasing levels)
+    var loop_node_2 = {
+        timeline: [audio_trial_2],
+        loop_function: function(data) {
+        	console.log("button pressed: ", data[0].button_pressed);
+        	console.log("counter 1: ", trial_counter_1);
+            if (data[0].button_pressed != -1) {     // button pressed, heard tone, end this loop
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    // NOTE: need to pass through the data object to check if this is the last level (silent) and check for the last sound level that was responded to 
+    // get next audio HTML decreasing by 10 dB
+    function getCurrentAudioHtmlDec() {
+        var audio_file_name = [file_path, trial_obj[sound_number_1].fileName].join("");
         htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
-        // first block, play every 2 sounds (10 dB difference)
-        trial_counter_1+=2;
+        // first block, play every 2 sounds in decreasing order (10 dB difference)
+        trial_counter_1+=1;
+        if ((sound_number_1+2) < trial_obj.length) {
+        	sound_number_1+=2;
+        }
         return htmlString;
     }
 
-
-    // // create second set of audio trials in a loop. These increase by 5 db (1 sound in the trial object array), and will start at the first sound that the participant missed in the decreasing db set. 
-    // var trial_array_up = [];
-    // for (var i = trial_obj.length-1; i >= 0; i--) {
-    //     var audio_trial_up = {
-    //         type: 'button-response',
-    //         is_html: true,
-    //         choices: ['Tone'],
-    //         button_html: "<button class='jspsych-btn'>Tone</button>", 
-    //         timing_stim: 2000,
-    //         timing_response: 2000,
-    //         response_ends_trial: false,
-    //         data: trial_obj[i],
-    //         stimulus: [getAudioHtml(i)],
-    //         timing_post_trial: 0,
-    //         on_finish: function(data) {
-    //             var response_type = "miss";
-    //             if (data.button_pressed == -1) { // -1 = no button press, did not hear tone
-    //                 jsPsych.data.addDataToLastTrial({response_type: response_type, 
-    //                     trial_segment: 'audio_test_response', task_segment: 'audio_test_main_up'});
-    //             }
-    //             if (data.button_pressed == 0) { // 0 = 'Tone' button pressed, heard tone
-    //                 response_type = "hit"
-    //                 var final_audio_data = jsPsych.data.getLastTrialData();
-    //                 final_audio_sound_num = final_audio_data.soundNumber;
-    //                 jsPsych.data.addDataToLastTrial({response_type: response_type, 
-    //                     trial_segment: 'audio_test_response', 
-    //                     task_segment: 'audio_test_main_up', 
-    //                     final_audio_sound_number: final_audio_sound_num});
-    //                 jsPsych.endCurrentTimeline();
-    //             }
-    //         }
-    //     }
-    //     trial_array_up.push([audio_trial_up]);
-    // }
+    // get next audio HTML increasing by 5 dB
+    function getCurrentAudioHtmlInc() {
+        var audio_file_name = [file_path, trial_obj[sound_number_2].fileName].join("");
+        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+        // second block, play every sound in increasing order (5 dB difference)
+        trial_counter_2+=1;
+        if ((sound_number_2-1) >= 0) {
+        	sound_number_2-=1;
+        }
+        return htmlString;
+    }
 
     // create experiment timeline
-    var timeline = [start_task, trial_start, silent_trial, loop_node_1];
+    var timeline = [start_task, trial_start, silent_trial, loop_node_1, loop_node_2];
 
     // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
     // then start experiment when files are finished loading
     var sound_files = [];
     for (var trial of trial_data_all[0].trial_data) {
         sound_files.push([file_path, trial.fileName].join(""));
+        console.log("loading...");
     }
     jsPsych.pluginAPI.preloadAudioFiles(sound_files, function(){startExperiment();});
 
