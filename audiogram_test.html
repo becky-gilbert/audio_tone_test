@@ -206,7 +206,7 @@
         return htmlString;
     }
 
-    // create the inter-trial intervals (this is created at start of task rather than evaluated on each trial because the evaluation slows the trial loading and causes white-screen gaps/flashes between trials)
+    // random inter-trial interval duration
     var random_ITI = function() {
     	return Math.floor(Math.random()*500)+min_ITI;
     }
