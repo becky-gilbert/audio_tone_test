@@ -110,6 +110,14 @@ input[type="text"] {
   border-color: #aaa;
 }
 
+.jspsych-btn-BG:active {
+    border: 2px solid green;
+}
+
+.jspsych-btn:active {
+    border: 2px solid green;
+}
+
 /* Container holding jsPsych content */
 
 .jspsych-display-element {
