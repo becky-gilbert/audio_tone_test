@@ -1,4 +1,16 @@
-var trial_data_all = [{
+var trial_data_all = [
+    {
+        "frequency": "silence",
+        "trial_data": [
+        {
+            "soundNumber": 1,
+            "dbReduction": "NA",
+            "fileName": "silence.mp3"
+        }
+        ]
+
+    },
+    {
         "frequency": "500", 
         "trial_data": [
         {
@@ -95,11 +107,6 @@ var trial_data_all = [{
             "soundNumber": 19,
             "dbReduction": 90,
             "fileName": "500_90.mp3",
-        },
-        {
-            "soundNumber": 20,
-            "dbReduction": "NA",
-            "fileName": "silence.mp3",
         }]
     },
     {
@@ -199,10 +206,5 @@ var trial_data_all = [{
             "soundNumber": 19,
             "dbReduction": 90,
             "fileName": "1000_90.mp3",
-        },
-        {
-            "soundNumber": 20,
-            "dbReduction": "NA",
-            "fileName": "silence.mp3",
         }]
     }];
