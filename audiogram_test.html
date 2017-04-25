@@ -129,6 +129,7 @@
 
     var trial_obj = trial_data_all[0].trial_data;
     var file_path = "audio/"; // change to var file_path = "/study_assets/"; when switching to JATOS
+    var min_ITI = 2000; 
 
     // add the JATOS properties to the data
     // jsPsych.data.addProperties({
@@ -179,8 +180,8 @@
         is_html: true,
         choices: ['Tone'],
         button_html: "<button class='jspsych-btn'>Tone</button>", 
-        timing_stim: 1000,
-        timing_response: 1000,
+        timing_stim: min_ITI,
+        timing_response: min_ITI,
         response_ends_trial: false,
         data: trial_obj[last_audio_index],
         stimulus: [getAudioHtml(last_audio_index)],
@@ -204,7 +205,7 @@
         choices: ['Tone'],
         button_html: "<button class='jspsych-btn'>Tone</button>", 
         timing_stim: random_ITI,
-        timing_response: 1500,
+        timing_response: min_ITI,
         response_ends_trial: false,
         stimulus: getCurrentAudioHtmlDec,  // dynamic parameter
         timing_post_trial: 0,
@@ -248,7 +249,7 @@
         choices: ['Tone'],
         button_html: "<button class='jspsych-btn'>Tone</button>", 
         timing_stim: random_ITI,
-        timing_response: 1500,
+        timing_response: min_ITI,
         response_ends_trial: false,
         stimulus: getCurrentAudioHtmlInc,  // dynamic parameter
         timing_post_trial: 0,
@@ -310,11 +311,11 @@
 
     // create the inter-trial intervals (this is created at start of task rather than evaluated on each trial because the evaluation slows the trial loading and causes white-screen gaps/flashes between trials)
     var random_ITI = function() {
-    	return Math.floor(Math.random()*500)+1500;
+    	return Math.floor(Math.random()*500)+min_ITI;
     }
 
     // create experiment timeline
-    var timeline = [start_task, trial_start, silent_trial, loop_node_1, silent_trial, loop_node_2, silent_trial];
+    var timeline = [start_task, trial_start, silent_trial, loop_node_1, loop_node_2, silent_trial];
 
     // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
     // then start experiment when files are finished loading
