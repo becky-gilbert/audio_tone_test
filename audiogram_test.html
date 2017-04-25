@@ -11,6 +11,7 @@
     <script src = "jspsych-5.0.3/plugins/jspsych-button-response.js"></script>
     <!-- <script src = "/jspsych-5.0.3/plugins/jspsych-text.js" type="text/javascript"></script> -->
     <script src = "jspsych-5.0.3/plugins/jspsych-single-stim.js" type="text/javascript"></script>
+    <script src = "data/audiogram_trial_data.js" type="text/javascript"></script> 
     <!-- <script src = "/PapaParse-4.1.2/papaparse.min.js"></script> -->
     <link rel="stylesheet" type="text/css" href="jspsych-5.0.3/css/jspsych.css">
     <!-- <script src="/assets/javascripts/jatos.js"></script> -->
@@ -22,111 +23,7 @@
 
     // get trial data from JATOS JSON input
     //var trial_obj = jatos.studyJsonInput[0].trial_data; // when running through JATOS
-    var trial_data_all = [{
-        "frequency": "500", 
-        "trial_data": [
-        {
-            "soundNumber": 1,
-            "dbReduction": 0,
-            "fileName": "500.mp3",
-        },
-        {
-            "soundNumber": 2,
-            "dbReduction": 5,
-            "fileName": "500_5.mp3",
-        },
-        {
-            "soundNumber": 3,
-            "dbReduction": 10,
-            "fileName": "500_10.mp3", 	 	
-        },
-        {
-            "soundNumber": 4,
-            "dbReduction": 15,
-            "fileName": "500_15.mp3",
-        },
-        {
-            "soundNumber": 5,
-            "dbReduction": 20,
-            "fileName": "500_20.mp3",
-        },
-        {
-            "soundNumber": 6,
-            "dbReduction": 25,
-            "fileName": "500_25.mp3",
-        },
-        {
-            "soundNumber": 7,
-            "dbReduction": 30,
-            "fileName": "500_30.mp3",
-        },
-        {
-            "soundNumber": 8,
-            "dbReduction": 35,
-            "fileName": "500_35.mp3",
-        },
-        {
-            "soundNumber": 9,
-            "dbReduction": 40,
-            "fileName": "500_40.mp3",
-        },
-        {
-            "soundNumber": 10,
-            "dbReduction": 45,
-            "fileName": "500_45.mp3",
-        },
-        {
-            "soundNumber": 11,
-            "dbReduction": 50,
-            "fileName": "500_50.mp3",
-        },
-        {
-            "soundNumber": 12,
-            "dbReduction": 55,
-            "fileName": "500_55.mp3",
-        },
-        {
-            "soundNumber": 13,
-            "dbReduction": 60,
-            "fileName": "500_60.mp3",
-        },
-        {
-            "soundNumber": 14,
-            "dbReduction": 65,
-            "fileName": "500_65.mp3",
-        },
-        {
-            "soundNumber": 15,
-            "dbReduction": 70,
-            "fileName": "500_70.mp3",
-        },
-        {
-            "soundNumber": 16,
-            "dbReduction": 75,
-            "fileName": "500_75.mp3",
-        },
-        {
-            "soundNumber": 17,
-            "dbReduction": 80,
-            "fileName": "500_80.mp3",
-        },
-        {
-            "soundNumber": 18,
-            "dbReduction": 85,
-            "fileName": "500_85.mp3",
-        },
-        {
-            "soundNumber": 19,
-            "dbReduction": 90,
-            "fileName": "500_90.mp3",
-        },
-        {
-            "soundNumber": 20,
-            "dbReduction": "NA",
-            "fileName": "silence.mp3",
-        }]
-    }];
-
+    // get trial data from javascript file audiogram_trial_data loaded in header
     var trial_obj = trial_data_all[0].trial_data;
     var file_path = "audio/"; // change to var file_path = "/study_assets/"; when switching to JATOS
     var min_ITI = 2000; 
