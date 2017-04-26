@@ -116,7 +116,12 @@
                 return getCurrentAudioHtmlDec(i);
                 })(i),  // dynamic parameter
             timing_post_trial: 0,
-            //data: getCurrentTrialData,      // dynamic parameter
+            data: {
+                frequency: trial_data_all[i].frequency,
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main',
+                block_type: 'decreasing'
+            }, 
             on_finish: (function(){ 
                 return getDecOnFinish(i);
                 })(i)
@@ -127,7 +132,7 @@
             timeline: [audio_trial_1],
             loop_function: function(data) {
                 if (data[0].button_pressed == -1) {     // no button pressed, did not hear tone, end this loop
-                    console.log("first missed sound number: ", sound_number_1);
+                    console.log("first missed sound, switch to block 2");
                     return false;
                 } else {
                     return true;
@@ -154,7 +159,12 @@
                 return getCurrentAudioHtmlInc(i);
                 })(i),  // dynamic parameter
             timing_post_trial: 0,
-            data: {frequency: trial_data_all[i].frequency},      
+            data: {
+                frequency: trial_data_all[i].frequency,
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main',
+                block_type: 'increasing'
+            },
             on_finish: (function(){ 
                 return getIncOnFinish(i);
                 })(i)
@@ -165,7 +175,7 @@
             timeline: [audio_trial_2],
             loop_function: function(data) {
                 if (data[0].button_pressed != -1) {     // button pressed, heard tone, end this loop
-                    console.log("first heard sound number: ", sound_number_2);
+                    console.log("first heard sound, switch to next frequency or end task");
                     return false;
                 } else {
                     return true;
@@ -194,20 +204,10 @@
     function getCurrentAudioHtmlInc(i) {
         console.log("i is ", i);
         var currentAudioHtmlInc = function(data, trial_counter_2, sound_number_2) {
-        // 2nd block, so start at the last level that was missed in 1st block
-            console.log("sound number 2: ", sound_number_2);
-            if (trial_counter_2 == trial_data_all[i].trial_data.length-1) { // first trial in this block
-                var previous_data = jsPsych.data.getTrialsOfType('button-response');
-                var last_sound_index = previous_data.length - 1; // assumes that the last saved data is the last trial from block 1 (first missed tone)
-                console.log("last sound index: ", last_sound_index);
-                var last_sound_number = previous_data[last_sound_index].sound_number; 
-                console.log("last sound number: ",last_sound_number);
-                sound_number_2 = last_sound_number-1; // because the indexing for sound numbers starts at 0
-                console.log("first missed sound number (get audio function): ", sound_number_2);
-            }
             //var audio_file_name = [file_path, trial_obj[sound_number_2].fileName].join("");
             console.log("sound number 2: ", sound_number_2);
             var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_2].fileName].join("");
+            console.log("audio: ", audio_file_name);
             htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
             return htmlString; 
         };
@@ -221,12 +221,24 @@
             if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
             } 
-            jsPsych.data.addDataToLastTrial({
-                response_type: response_type, 
-                trial_segment: 'audio_test_response', 
-                task_segment: 'audio_test_main',
-                sound_number: trial_data_all[i].trial_data[sound_number_1].soundNumber
-            });
+            console.log("adding data to last trial");
+            var data_to_add = $.extend({}, {response_type: response_type}, trial_data_all[i].trial_data[sound_number_1]);
+            jsPsych.data.addDataToLastTrial(data_to_add);
+            // jsPsych.data.addDataToLastTrial({
+            //     response_type: response_type, 
+            //     sound_number: trial_data_all[i].trial_data[sound_number_1].soundNumber
+            // });
+            // jsPsych.data.addDataToLastTrial(trial_data_all[i].trial_data[sound_number_1]);
+            if (data.button_pressed === -1) { // -1 = no button pressed, switch blocks, change the value of sound_number_2 to the sound number of the last trial (1st missed tone)
+                console.log("starting block 2 sound number: ", sound_number_2);
+                var previous_data = jsPsych.data.getTrialsOfType('button-response');
+                var last_sound_index = previous_data.length - 1; // assumes that the last saved data is the last trial from block 1 (first missed tone)
+                console.log("last sound index: ", last_sound_index);
+                //var last_sound_number = previous_data[last_sound_index].sound_number; 
+                //console.log("last sound number: ",last_sound_number);
+                sound_number_2 = previous_data[last_sound_index].soundNumber; 
+                console.log("new starting block 2 sound number: ", sound_number_2);
+            }
             // update the sound and trial numbers
             // first block, play every 2 sounds in decreasing order (10 dB difference)
             trial_counter_1+=1;
@@ -243,12 +255,13 @@
             if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
             } 
-            jsPsych.data.addDataToLastTrial({
-                response_type: response_type, 
-                trial_segment: 'audio_test_response', 
-                task_segment: 'audio_test_main',
-                sound_number: trial_data_all[i].trial_data[sound_number_2].soundNumber
-            });
+            console.log("adding data to last trial");
+            var data_to_add = $.extend({}, {response_type: response_type}, trial_data_all[i].trial_data[sound_number_2]);
+            jsPsych.data.addDataToLastTrial(data_to_add);
+            // jsPsych.data.addDataToLastTrial({
+            //     response_type: response_type, 
+            // });
+            // jsPsych.data.addDataToLastTrial(trial_data_all[i].trial_data[sound_number_2]);
             // update the sound and trial numbers
             // second block, so play every sound in increasing order (5 dB difference)
             trial_counter_2+=1;
@@ -257,6 +270,7 @@
             }
             return sound_number_2;
         };
+        return incOnFinish;
     }
 
     // create the inter-trial intervals (this is created at start of task rather than evaluated on each trial because the evaluation slows the trial loading and causes white-screen gaps/flashes between trials)
