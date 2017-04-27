@@ -41,11 +41,12 @@
     // audiogram instructions - press button when you hear tone, otherwise do nothing
     var start_task = {
         type: 'instructions',
-        pages: ['<p>You will hear a series of tones, presented at different levels and frequencies.<br><br>' + 
-            'Whenever you hear a tone, press the "Tone" button.<br><br>We do not expect you to hear all the tones ' +
-            '- some will be too quiet to hear, and if this is the case then you should NOT press the button.' + 
-            '<br><br>This task will take a few minutes to complete.<br><br>' +
-            'When you are ready, please press the "Next" button to start.</p>'],
+        pages: ['<br><p>You will hear a series of tones. They will be presented at different volume levels and ' +
+            'different frequencies.<br><br>' + 
+            'Press the "Tone" button as soon as you hear a tone.<br><br>We do not expect you to hear all the tones ' +
+            '- some will be too quiet to hear, and when this happens, then you should NOT press the button.' + 
+            '<br><br>This task will take a few minutes to complete.<br><br>Please do not adjust the volume ' +
+            'on your computer.<br><br>When you are ready, please press the "Next" button to start.</p>'],
         show_clickable_nav: true,
         timing_post_trial: 1000,
         data: {task_segment: 'instructions'}
