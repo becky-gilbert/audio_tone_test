@@ -53,14 +53,6 @@
     };
     timeline.push(start_task);
 
-    // function for generating the stimulus HTML (HTML5 audio tag and prompt text) on each trial
-    // this is called when the trials are created in a loop, with the iterator value as the argument
-    function getAudioHtml(index) {
-        var audio_file_name = [file_path, trial_data_all[index].trial_data.fileName].join("");
-        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
-        return htmlString;
-    }
-
     // first 'button-response' trial is just to start the task, so that the participant knows where the button will be on the screen
     var trial_start = {
         type: 'button-response',
@@ -88,7 +80,7 @@
         timing_response: min_ITI,
         response_ends_trial: false,
         data: trial_data_all[silent_trial_index].trial_data,
-        stimulus: [getAudioHtml(silent_trial_index)],
+        stimulus: [getSilentAudioHtml(silent_trial_index)],
         timing_post_trial: 0,
         on_finish: function(data) {
             var response_type = "failed_catch";
@@ -191,6 +183,16 @@
 
     } // end frequency loop
 
+    // functions for generating the stimulus HTML (HTML5 audio tag and prompt text) on each trial
+    // silent audio trial
+    function getSilentAudioHtml(index) {
+        // silent trial data is in trial_data_all array, accessed by the index parameter, and is the first (only) element of the trial_data array
+        var audio_file_name = [file_path, trial_data_all[index].trial_data[0].fileName].join("");
+        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+        return htmlString;
+    }
+
+    // these are called when the trials are created in a loop, with the iterator value as the argument
     // get next audio HTML stimulus, decreasing by 10 dB
     function getCurrentAudioHtmlDec(i) {
         console.log("i is ", i);
