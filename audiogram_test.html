@@ -100,7 +100,6 @@
         var trial_counter_1 = 0;
         var sound_number_1 = 0;
         var current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
-        console.log("iti is: ", current_ITI);
         var audio_trial_1 = {
             type: 'button-response',
             is_html: true,
@@ -143,7 +142,6 @@
         //var sound_number_2 = trial_obj.length-1;
         var trial_counter_2 = trial_data_all[i].trial_data.length-1;
         var sound_number_2 = trial_data_all[i].trial_data.length-1;
-        console.log("sound number 2 starting value: ", sound_number_2);
         var audio_trial_2 = {
             type: 'button-response',
             is_html: true,
@@ -196,7 +194,6 @@
     // these are called when the trials are created in a loop, with the iterator value as the argument
     // get next audio HTML stimulus, decreasing by 10 dB
     function getCurrentAudioHtmlDec(i) {
-        console.log("i is ", i);
         var currentAudioHtmlDec = function(sound_number_1) {
             //var audio_file_name = [file_path, trial_obj[sound_number_1].fileName].join("");
             var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_1].fileName].join("");
@@ -209,7 +206,6 @@
 
     // get next audio HTML stimulus, increasing by 5 dB
     function getCurrentAudioHtmlInc(i) {
-        console.log("i is ", i);
         var currentAudioHtmlInc = function(data, trial_counter_2, sound_number_2) {
             //var audio_file_name = [file_path, trial_obj[sound_number_2].fileName].join("");
             console.log("sound number 2: ", sound_number_2);
