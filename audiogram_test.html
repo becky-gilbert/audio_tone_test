@@ -25,8 +25,9 @@
     //var trial_obj = jatos.studyJsonInput[0].trial_data; // when running through JATOS
     // get trial data from javascript file audiogram_trial_data loaded in header
     //var trial_obj = trial_data_all[0].trial_data; // use this for old data structure (first in data object)
-    var file_path = "audio/"; // change to var file_path = "/study_assets/"; when switching to JATOS
-    var min_ITI = 2000; 
+    var file_path = "audio/"; // change to var file_path = "/study_assets/audio/"; when switching to JATOS
+    var min_ITI = 1500; 
+    var rand_ITI = 1500;
     var timeline = [];
 
     // add the JATOS properties to the data
@@ -104,13 +105,15 @@
         // create first block trial, with a function as the stimulus parameter, and loop this trial until tone not heard (miss)
         var trial_counter_1 = 0;
         var sound_number_1 = 0;
+        var current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
+        console.log("iti is: ", current_ITI);
         var audio_trial_1 = {
             type: 'button-response',
             is_html: true,
             choices: ['Tone'],
             button_html: "<button class='jspsych-btn'>Tone</button>", 
-            timing_stim: random_ITI,
-            timing_response: min_ITI,
+            timing_stim: function() {return current_ITI;},
+            timing_response: function() {return current_ITI;},
             response_ends_trial: false,
             stimulus: (function(){ 
                 return getCurrentAudioHtmlDec(i);
@@ -152,8 +155,8 @@
             is_html: true,
             choices: ['Tone'],
             button_html: "<button class='jspsych-btn'>Tone</button>", 
-            timing_stim: random_ITI,
-            timing_response: min_ITI,
+            timing_stim: function() {return current_ITI;},
+            timing_response: function() {return current_ITI;},
             response_ends_trial: false,
             stimulus: (function(){ 
                 return getCurrentAudioHtmlInc(i);
@@ -217,14 +220,17 @@
     // on finish functions for the decreasing and increasing dB blocks
     function getDecOnFinish(i) {
         var decOnFinish = function(data) {
+            // update counter 
             trial_counter_1+=1;
             var response_type = "miss";
             if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type}, trial_data_all[i].trial_data[sound_number_1]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI}, trial_data_all[i].trial_data[sound_number_1]);
             jsPsych.data.addDataToLastTrial(data_to_add);
+            // update ITI
+            current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
             if (data.button_pressed === -1) { // -1 = no button pressed, switch blocks, change the value of sound_number_2 to the sound number of the last trial (1st missed tone)
                 console.log("starting block 2 sound number: ", sound_number_2);
                 var previous_data = jsPsych.data.getTrialsOfType('button-response');
@@ -246,16 +252,19 @@
     }
     function getIncOnFinish(i) {
         var incOnFinish = function(data) {
+            // update counter and current ITI
+            trial_counter_2+=1;
             var response_type = "miss";
             if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type}, trial_data_all[i].trial_data[sound_number_2]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI}, trial_data_all[i].trial_data[sound_number_2]);
             jsPsych.data.addDataToLastTrial(data_to_add);
+            // update ITI
+            current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
             // update the sound and trial numbers
             // second block, so play every sound in increasing order (5 dB difference)
-            trial_counter_2+=1;
             if (data.button_pressed === 0) { // heard tone, reset counters and switch to next frequency
                 sound_number_1 = 0;
                 trial_counter_1 = 0;
@@ -272,11 +281,11 @@
     }
 
     // create the inter-trial intervals (this is created at start of task rather than evaluated on each trial because the evaluation slows the trial loading and causes white-screen gaps/flashes between trials)
-    var random_ITI = function() {
-        var ITI = Math.floor(Math.random()*1000)+min_ITI;
-        console.log("iti is: ", ITI);
-        return ITI;
-    };
+    // var random_ITI = function() {
+    //     var ITI = Math.floor(Math.random()*1000)+min_ITI;
+    //     console.log("iti is: ", ITI);
+    //     return ITI;
+    // };
 
     // create experiment timeline
     //var timeline = [start_task, trial_start, silent_trial, loop_node_1, loop_node_2, silent_trial];
