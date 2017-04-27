@@ -236,9 +236,8 @@
                 var previous_data = jsPsych.data.getTrialsOfType('button-response');
                 var last_sound_index = previous_data.length - 1; // assumes that the last saved data is the last trial from block 1 (first missed tone)
                 console.log("last sound index: ", last_sound_index);
-                //var last_sound_number = previous_data[last_sound_index].sound_number; 
-                //console.log("last sound number: ",last_sound_number);
-                sound_number_2 = previous_data[last_sound_index].soundNumber; 
+                // update sound_number_2 - starts at the sound before the last sound that was played (i.e. +5 dB)
+                sound_number_2 = previous_data[last_sound_index].soundNumber-1; 
                 console.log("new starting block 2 sound number: ", sound_number_2);
             } else { // 0 = button pressed, increase sound number by 2 for next trial
                 // first block, so play every 2 sounds in decreasing order (10 dB difference)
