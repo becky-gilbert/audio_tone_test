@@ -5,7 +5,6 @@ var trial_data_all = [{
         "dbReduction": "NA",
         "fileName": "silence.mp3"
     }]
-
 }, {
     "frequency": "500",
     "trial_data": [{
