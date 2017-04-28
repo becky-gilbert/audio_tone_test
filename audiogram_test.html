@@ -226,12 +226,13 @@
             var response_type = "miss";
             var switch_block = "yes";
             var end_frequency = "no";
+            var last_sound_level = "NA";
             if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
                 switch_block = "no";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency}, trial_data_all[i].trial_data[sound_number_1]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency, last_sound_level: last_sound_level}, trial_data_all[i].trial_data[sound_number_1]);
             jsPsych.data.addDataToLastTrial(data_to_add);
             // new ITI
             current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
@@ -241,6 +242,9 @@
                 console.log("last sound index: ", last_sound_index);
                 // update sound_number_2 - starts at the sound before the last sound that was played (i.e. +5 dB)
                 sound_number_2 = previous_data[last_sound_index].soundNumber-1; 
+                // last_sound_index is the trial that just finished, we need the one before it
+                last_sound_level = previous_data[last_sound_index-1].dbReduction;
+                jsPsych.data.addDataToLastTrial({last_sound_level: last_sound_level});
                 console.log("new starting block 2 sound number: ", sound_number_2);
                 
             } else { // 0 = button pressed, increase sound number by 2 for next trial
@@ -259,19 +263,24 @@
             var response_type = "miss";
             var switch_block = "no";
             var end_frequency = "no";
+            var last_sound_level = "NA";
             if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
                 switch_block = "yes";
                 end_frequency = "yes";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency}, trial_data_all[i].trial_data[sound_number_2]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency, last_sound_level: last_sound_level}, trial_data_all[i].trial_data[sound_number_2]);
             jsPsych.data.addDataToLastTrial(data_to_add);
             // new ITI
             current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
             // update the sound and trial numbers
             // second block, so play every sound in increasing order (5 dB difference)
             if (data.button_pressed === 0 && data.rt <= rt_limit) { // heard tone, reset counters and switch to next frequency
+                var previous_data = jsPsych.data.getTrialsOfType('button-response');
+                last_sound_level = previous_data[previous_data.length-1].dbReduction;
+                console.log("last sound level: ", last_sound_level);
+                jsPsych.data.addDataToLastTrial({last_sound_level: last_sound_level});
                 sound_number_1 = 0;
                 trial_counter_1 = 0;
                 sound_number_2 = trial_data_all[i].trial_data.length-1;
