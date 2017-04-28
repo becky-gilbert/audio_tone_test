@@ -9,7 +9,7 @@
     <script src = "jspsych-5.0.3/plugins/jspsych-instructions.js" type="text/javascript"></script>
     <script src = "jspsych-5.0.3/plugins/jspsych-single-audio-ends-trial.js" type="text/javascript"></script>
     <script src = "jspsych-5.0.3/plugins/jspsych-button-response.js"></script>
-    <!-- <script src = "/jspsych-5.0.3/plugins/jspsych-text.js" type="text/javascript"></script> -->
+    <script src = "jspsych-5.0.3/plugins/jspsych-text.js" type="text/javascript"></script>
     <script src = "jspsych-5.0.3/plugins/jspsych-single-stim.js" type="text/javascript"></script>
     <script src = "data/audiogram_trial_data.js" type="text/javascript"></script> 
     <!-- <script src = "/PapaParse-4.1.2/papaparse.min.js"></script> -->
@@ -293,6 +293,29 @@
         };
         return incOnFinish;
     }
+
+    // function for accessing data by key-value pairs
+    function getTrialsByKeyValue(key, value) {
+        var data = jsPsych.data.getData();
+        data = flatten(data);
+        var trials = [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i][key] == value) {
+                trials.push(data[i]);
+            }
+        }
+        return trials;
+    }
+
+    // define debrief screen
+    var debrief_block = {
+        type: "text",
+        text: function() {
+            var switch_data = getTrialsByKeyValue("switch_block","yes");
+            return "<p>Number of switches is " + switch_data.length + ".<br><br>Press any key to finish the experiment.</p>";
+        }
+    };
+    timeline.push(debrief_block);
 
     // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
     // then start experiment when files are finished loading
