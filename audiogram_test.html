@@ -28,6 +28,7 @@
     var file_path = "audio/"; // change to var file_path = "/study_assets/audio/"; when switching to JATOS
     var min_ITI = 1500; 
     var rand_ITI = 1500;
+    var rt_limit = 1500;
     var timeline = [];
 
     // add the JATOS properties to the data
@@ -127,7 +128,7 @@
         var loop_node_1 = {
             timeline: [audio_trial_1],
             loop_function: function(data) {
-                if (data[0].button_pressed == -1) {     // no button pressed, did not hear tone, end this loop
+                if (data[0].button_pressed == -1 || data[0].rt >= rt_limit) { // no button pressed or response was too slow, did not hear tone, end this loop
                     console.log("first missed sound, switch to block 2");
                     return false;
                 } else {
@@ -169,7 +170,7 @@
         var loop_node_2 = {
             timeline: [audio_trial_2],
             loop_function: function(data) {
-                if (data[0].button_pressed != -1) {     // button pressed, heard tone, end this loop
+                if (data[0].button_pressed !== -1 && data[0].rt <= rt_limit) { // button pressed in time, heard tone, end this loop
                     console.log("first heard sound, switch to next frequency");
                     return false;
                 } else {
@@ -223,22 +224,25 @@
             // update counter 
             trial_counter_1+=1;
             var response_type = "miss";
-            if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
+            var switch_block = "yes";
+            var end_frequency = "no";
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
+                switch_block = "no";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI}, trial_data_all[i].trial_data[sound_number_1]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency}, trial_data_all[i].trial_data[sound_number_1]);
             jsPsych.data.addDataToLastTrial(data_to_add);
             // new ITI
             current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
-            if (data.button_pressed === -1) { // -1 = no button pressed, switch blocks, change the value of sound_number_2 to the sound number of the last trial (1st missed tone)
-                console.log("starting block 2 sound number: ", sound_number_2);
+            if (data.button_pressed === -1 || data.rt > rt_limit) { // -1 = no button pressed or response was too slow, switch blocks, change the value of sound_number_2 to the sound number of the last trial (1st missed tone)
                 var previous_data = jsPsych.data.getTrialsOfType('button-response');
                 var last_sound_index = previous_data.length - 1; // assumes that the last saved data is the last trial from block 1 (first missed tone)
                 console.log("last sound index: ", last_sound_index);
                 // update sound_number_2 - starts at the sound before the last sound that was played (i.e. +5 dB)
                 sound_number_2 = previous_data[last_sound_index].soundNumber-1; 
                 console.log("new starting block 2 sound number: ", sound_number_2);
+                
             } else { // 0 = button pressed, increase sound number by 2 for next trial
                 // first block, so play every 2 sounds in decreasing order (10 dB difference)
                 if ((sound_number_1+2) < trial_data_all[i].trial_data.length) {
@@ -253,17 +257,21 @@
             // update counter and current ITI
             trial_counter_2+=1;
             var response_type = "miss";
-            if (data.button_pressed === 0) { // 0 = 'Tone' button pressed, heard tone
+            var switch_block = "no";
+            var end_frequency = "no";
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
                 response_type = "hit";
+                switch_block = "yes";
+                end_frequency = "yes";
             } 
             console.log("adding data to last trial");
-            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI}, trial_data_all[i].trial_data[sound_number_2]);
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency}, trial_data_all[i].trial_data[sound_number_2]);
             jsPsych.data.addDataToLastTrial(data_to_add);
             // new ITI
             current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
             // update the sound and trial numbers
             // second block, so play every sound in increasing order (5 dB difference)
-            if (data.button_pressed === 0) { // heard tone, reset counters and switch to next frequency
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // heard tone, reset counters and switch to next frequency
                 sound_number_1 = 0;
                 trial_counter_1 = 0;
                 sound_number_2 = trial_data_all[i].trial_data.length-1;
@@ -282,9 +290,12 @@
     var sound_files = [];
     for (var freq_obj=0; freq_obj < trial_data_all.length; freq_obj++) {
         for (var trial=0; trial < trial_data_all[freq_obj].trial_data.length; trial++) {
-            sound_files.push([file_path, trial_data_all[freq_obj].trial_data[trial].fileName].join(""));
+            var sound_file_name = [file_path, trial_data_all[freq_obj].trial_data[trial].fileName].join("");
+            console.log("sound file added: ", sound_file_name);
+            sound_files.push(sound_file_name);
         }
     }
+    console.log("sound file list: ", sound_files);
     jsPsych.pluginAPI.preloadAudioFiles(sound_files, function(){startExperiment();}, function(){console.log("loading...");});
 
     function startExperiment() {
