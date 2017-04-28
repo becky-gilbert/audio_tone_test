@@ -295,8 +295,7 @@
     }
 
     // function for accessing data by key-value pairs
-    function getTrialsByKeyValue(key, value) {
-        var data = jsPsych.data.getData();
+    function getTrialsByKeyValue(data, key, value) {
         data = flatten(data);
         var trials = [];
         for (var i = 0; i < data.length; i++) {
@@ -307,12 +306,43 @@
         return trials;
     }
 
+    function add(a, b) {
+        return a + b;
+    }
+
     // define debrief screen
     var debrief_block = {
         type: "text",
         text: function() {
-            var switch_data = getTrialsByKeyValue("switch_block","yes");
-            return "<p>Number of switches is " + switch_data.length + ".<br><br>Press any key to finish the experiment.</p>";
+            var all_data = jsPsych.data.getData();
+            var switch_data = getTrialsByKeyValue(all_data,"switch_block","yes");
+            // get unique frequencies from the data
+            var frequencies_arr = [];
+            var frequencies_obj = {};
+            for (var i in switch_data) {
+                if (typeof(frequencies_obj[switch_data[i].frequency]) == "undefined") {
+                    frequencies_arr.push(switch_data[i].frequency);
+                }
+                frequencies_obj[switch_data[i].frequency] = 0;
+            }
+            // get -dB values at all reversals by frequency
+            var summary_arr = [];
+            for (var j = 0; j < frequencies_arr.length; j++) {
+                var freq_data = getTrialsByKeyValue(switch_data, "frequency", frequencies_arr[j].toString());
+                var switch_levels = freq_data.map(function (obj) {return obj.last_sound_level;});
+                var sum_of_levels = switch_levels.reduce(add,0);
+                var mean_of_levels = sum_of_levels/switch_levels.length;
+                var max_of_levels = Math.max.apply(Math, switch_levels);
+                var min_of_levels = Math.min.apply(Math, switch_levels);
+                summary_arr.push({frequency: frequencies_arr[j], switch_levels: switch_levels, mean_of_levels: mean_of_levels, max_of_levels: max_of_levels, min_of_levels: min_of_levels});
+            }
+            var debrief_html_text = "<p>Thanks! Here are your results.</p>";
+            for (var k = 0; k < summary_arr.length; k++) {
+                var text = "<p><strong>" + summary_arr[k].frequency + " Hz</strong><br>Maximum reversal level: " + summary_arr[k].max_of_levels + " -dB<br>Minimum reversal level: " + summary_arr[k].min_of_levels + " -dB<br>Mean reversal level: " + summary_arr[k].mean_of_levels + " -dB<br></p>";
+                debrief_html_text += text;
+            }
+            // debrief_html_text = "<p>Number of switches is " + switch_data.length + ".<br><br>Press any key to finish the experiment.</p>";
+            return debrief_html_text;
         }
     };
     timeline.push(debrief_block);
