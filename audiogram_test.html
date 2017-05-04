@@ -188,7 +188,7 @@
     function getSilentAudioHtml(index) {
         // silent trial data is in trial_data_all array, accessed by the index parameter, and is the first (only) element of the trial_data array
         var audio_file_name = [file_path, trial_data_all[index].trial_data[0].fileName].join("");
-        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
         return htmlString;
     }
 
@@ -199,7 +199,7 @@
             //var audio_file_name = [file_path, trial_obj[sound_number_1].fileName].join("");
             var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_1].fileName].join("");
             console.log("audio: ", audio_file_name);
-            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
             return htmlString;
         };
         return function(){return currentAudioHtmlDec(sound_number_1);};
@@ -212,7 +212,7 @@
             console.log("sound number 2: ", sound_number_2);
             var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_2].fileName].join("");
             console.log("audio: ", audio_file_name);
-            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button whenever you hear a tone.</p></div>";
+            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
             return htmlString; 
         };
         return function(data){return currentAudioHtmlInc(data, trial_counter_2, sound_number_2);};
@@ -341,6 +341,7 @@
                 var text = "<p><strong>" + summary_arr[k].frequency + " Hz</strong><br>Maximum reversal level: " + summary_arr[k].max_of_levels + " -dB<br>Minimum reversal level: " + summary_arr[k].min_of_levels + " -dB<br>Mean reversal level: " + summary_arr[k].mean_of_levels + " -dB<br></p>";
                 debrief_html_text += text;
             }
+            debrief_html_text += "<p>Press any key to end the study.</p>";
             // debrief_html_text = "<p>Number of switches is " + switch_data.length + ".<br><br>Press any key to finish the experiment.</p>";
             return debrief_html_text;
         }
