@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Audio check</title>
+    <script src = "/study_assets/audio_tone_test/jquery.min.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/jspsych.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/plugins/jspsych-instructions.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/plugins/jspsych-single-audio-ends-trial.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/plugins/jspsych-button-response.js"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/plugins/jspsych-text.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/jspsych-5.0.3/plugins/jspsych-single-stim.js" type="text/javascript"></script>
+    <script src = "/study_assets/audio_tone_test/data/audiogram_trial_data.js" type="text/javascript"></script> 
+    <!-- <script src = "/PapaParse-4.1.2/papaparse.min.js"></script> -->
+    <link rel="stylesheet" type="text/css" href="/study_assets/audio_tone_test/jspsych-5.0.3/css/jspsych_BG_btn.css">
+    <script src="/assets/javascripts/jatos.js"></script>
+</head>
+<body>
+</body>
+<script type="text/javascript">
+jatos.onLoad(function() {
+
+    // get trial data from JATOS JSON input
+    //var trial_obj = jatos.studyJsonInput[0].trial_data; // when running through JATOS
+    // get trial data from javascript file audiogram_trial_data loaded in header
+    //var trial_obj = trial_data_all[0].trial_data; // use this for old data structure (first in data object)
+    var file_path = "/study_assets/audio_tone_test/audio/"; 
+    var min_ITI = 1500; 
+    var rand_ITI = 1500;
+    var rt_limit = 1500;
+    var timeline = [];
+
+    // add the JATOS properties to the data
+    jsPsych.data.addProperties({
+        jatos_study_ID: jatos.studyId,
+        jatos_component_ID: jatos.componentId,
+        jatos_component_result_ID: jatos.componentResultId,
+        jatos_result_ID_URL: jsPsych.data.getURLVariable('srid')
+    });
+
+    // audiogram instructions - press button when you hear tone, otherwise do nothing
+    var start_task = {
+        type: 'instructions',
+        pages: ['<br><p>You will hear a series of tones. They will be presented at different volume levels and ' +
+            'different frequencies.<br><br>Your task is to click the "Tone" button as soon as you hear a tone.' +
+            '<br><br>We do not expect you to hear all the tones. Sometimes they will be too quiet to hear, ' +
+            'and when this happens you should NOT press the button.<br><br>' + 
+            'This task will take a few minutes to complete.<br><br>' +
+            'Please stay in full screen mode with your headphones on, and do not adjust the volume on your computer.' +
+            '<br><br>When you are ready, please press the "Next" button to start.</p>'],
+        show_clickable_nav: true,
+        timing_post_trial: 1000,
+        data: {task_segment: 'instructions'}
+    };
+    timeline.push(start_task);
+
+    // first 'button-response' trial is just to start the task, so that the participant knows where the button will be on the screen
+    var trial_start = {
+        type: 'button-response',
+        is_html: true,
+        choices: ['Start'],
+        button_html: "<button class='jspsych-btn'>Start</button>", 
+        timing_stim: -1,
+        timing_response: -1,
+        response_ends_trial: true,
+        stimulus: "<div><p>Please press the 'Start' button to start.</p></div>",
+        data: {task_segment: 'trial_start'}
+    };
+    timeline.push(trial_start);
+
+    // silent trial to start the task - catch trial, and decouples 1st appearance of Tone button with 1st tone presentation
+    // silent trial data is stored in trial_data_all[0]
+    //var last_audio_index = trial_obj.length - 1; 
+    var silent_trial_index = 0;
+    var silent_trial = {
+        type: 'button-response',
+        is_html: true,
+        choices: ['Tone'],
+        button_html: "<button class='jspsych-btn'>Tone</button>", 
+        timing_stim: min_ITI,
+        timing_response: min_ITI,
+        response_ends_trial: false,
+        data: trial_data_all[silent_trial_index].trial_data,
+        stimulus: [getSilentAudioHtml(silent_trial_index)],
+        timing_post_trial: 0,
+        on_finish: function(data) {
+            var response_type = "failed_catch";
+            // -1 = no button press, didn't hear silent tone, correct, 0 = button pressed, heard silent tone, incorrect
+            if (data.button_pressed == -1) { 
+                response_type = "correct_miss";
+            }
+            jsPsych.data.addDataToLastTrial({response_type: response_type, trial_segment: 'audio_test_catch', task_segment: 'audio_test_main'}); 
+        }
+    };
+    timeline.push(silent_trial);
+
+    // for each set of tone frequencies: index 1 (first non-silent set) through end of trial_data_all array
+    for (var i=1; i<trial_data_all.length; i++) {
+        // create first block trial, with a function as the stimulus parameter, and loop this trial until tone not heard (miss)
+        var trial_counter_1 = 0;
+        var sound_number_1 = 0;
+        var current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
+        var audio_trial_1 = {
+            type: 'button-response',
+            is_html: true,
+            choices: ['Tone'],
+            button_html: "<button class='jspsych-btn'>Tone</button>", 
+            timing_stim: function() {return current_ITI;},
+            timing_response: function() {return current_ITI;},
+            response_ends_trial: false,
+            stimulus: (function(){ 
+                return getCurrentAudioHtmlDec(i);
+                })(i),  // dynamic parameter
+            timing_post_trial: 0,
+            data: {
+                frequency: trial_data_all[i].frequency,
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main',
+                block_type: 'decreasing'
+            }, 
+            on_finish: (function(){ 
+                return getDecOnFinish(i);
+                })(i)
+        };
+
+        // loop node for first block (decreasing levels)
+        var loop_node_1 = {
+            timeline: [audio_trial_1],
+            loop_function: function(data) {
+                if (data[0].button_pressed == -1 || data[0].rt >= rt_limit) { // no button pressed or response was too slow, did not hear tone, end this loop
+                    console.log("first missed sound, switch to block 2");
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
+        // add loop node 1 to timeline
+        timeline.push(loop_node_1);
+
+        //var trial_counter_2 = trial_obj.length-1;
+        //var sound_number_2 = trial_obj.length-1;
+        var trial_counter_2 = trial_data_all[i].trial_data.length-1;
+        var sound_number_2 = trial_data_all[i].trial_data.length-1;
+        var audio_trial_2 = {
+            type: 'button-response',
+            is_html: true,
+            choices: ['Tone'],
+            button_html: "<button class='jspsych-btn'>Tone</button>", 
+            timing_stim: function() {return current_ITI;},
+            timing_response: function() {return current_ITI;},
+            response_ends_trial: false,
+            stimulus: (function(){ 
+                return getCurrentAudioHtmlInc(i);
+                })(i),  // dynamic parameter
+            timing_post_trial: 0,
+            data: {
+                frequency: trial_data_all[i].frequency,
+                trial_segment: 'audio_test_response', 
+                task_segment: 'audio_test_main',
+                block_type: 'increasing'
+            },
+            on_finish: (function(){ 
+                return getIncOnFinish(i);
+                })(i)
+        };
+
+        // loop node for first block (decreasing levels)
+        var loop_node_2 = {
+            timeline: [audio_trial_2],
+            loop_function: function(data) {
+                if (data[0].button_pressed !== -1 && data[0].rt <= rt_limit) { // button pressed in time, heard tone, end this loop
+                    console.log("first heard sound, switch to next frequency");
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
+        // add loop node 2 to timeline
+        timeline.push(loop_node_2);
+
+    } // end frequency loop
+
+    // functions for generating the stimulus HTML (HTML5 audio tag and prompt text) on each trial
+    // silent audio trial
+    function getSilentAudioHtml(index) {
+        // silent trial data is in trial_data_all array, accessed by the index parameter, and is the first (only) element of the trial_data array
+        var audio_file_name = [file_path, trial_data_all[index].trial_data[0].fileName].join("");
+        htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
+        return htmlString;
+    }
+
+    // these are called when the trials are created in a loop, with the iterator value as the argument
+    // get next audio HTML stimulus, decreasing by 10 dB
+    function getCurrentAudioHtmlDec(i) {
+        var currentAudioHtmlDec = function(sound_number_1) {
+            //var audio_file_name = [file_path, trial_obj[sound_number_1].fileName].join("");
+            var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_1].fileName].join("");
+            console.log("audio: ", audio_file_name);
+            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
+            return htmlString;
+        };
+        return function(){return currentAudioHtmlDec(sound_number_1);};
+    }
+
+    // get next audio HTML stimulus, increasing by 5 dB
+    function getCurrentAudioHtmlInc(i) {
+        var currentAudioHtmlInc = function(data, trial_counter_2, sound_number_2) {
+            //var audio_file_name = [file_path, trial_obj[sound_number_2].fileName].join("");
+            console.log("sound number 2: ", sound_number_2);
+            var audio_file_name = [file_path, trial_data_all[i].trial_data[sound_number_2].fileName].join("");
+            console.log("audio: ", audio_file_name);
+            htmlString = "<div><audio src='" + audio_file_name + "' autoplay></div><div><p>Press the button as soon as you hear a tone.</p></div>";
+            return htmlString; 
+        };
+        return function(data){return currentAudioHtmlInc(data, trial_counter_2, sound_number_2);};
+    }
+
+    // on finish functions for the decreasing and increasing dB blocks
+    function getDecOnFinish(i) {
+        var decOnFinish = function(data) {
+            // update counter 
+            trial_counter_1+=1;
+            var response_type = "miss";
+            var switch_block = "yes";
+            var end_frequency = "no";
+            var last_sound_level = "NA";
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
+                response_type = "hit";
+                switch_block = "no";
+            } 
+            console.log("adding data to last trial");
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency, last_sound_level: last_sound_level}, trial_data_all[i].trial_data[sound_number_1]);
+            jsPsych.data.addDataToLastTrial(data_to_add);
+            // new ITI
+            current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
+            if (data.button_pressed === -1 || data.rt > rt_limit) { // -1 = no button pressed or response was too slow, switch blocks, change the value of sound_number_2 to the sound number of the last trial (1st missed tone)
+                var previous_data = jsPsych.data.getTrialsOfType('button-response');
+                var last_sound_index = previous_data.length - 1; // assumes that the last saved data is the last trial from block 1 (first missed tone)
+                console.log("last sound index: ", last_sound_index);
+                // update sound_number_2 - starts at the sound before the last sound that was played (i.e. +5 dB)
+                sound_number_2 = previous_data[last_sound_index].soundNumber-1; 
+                // last_sound_index is the trial that just finished, we need the one before it
+                last_sound_level = previous_data[last_sound_index-1].dbReduction;
+                jsPsych.data.addDataToLastTrial({last_sound_level: last_sound_level});
+                console.log("new starting block 2 sound number: ", sound_number_2);
+                
+            } else { // 0 = button pressed, increase sound number by 2 for next trial
+                // first block, so play every 2 sounds in decreasing order (10 dB difference)
+                if ((sound_number_1+2) < trial_data_all[i].trial_data.length) {
+                    sound_number_1+=2;
+                }
+            }
+        };
+        return decOnFinish;
+    }
+    function getIncOnFinish(i) {
+        var incOnFinish = function(data) {
+            // update counter and current ITI
+            trial_counter_2+=1;
+            var response_type = "miss";
+            var switch_block = "no";
+            var end_frequency = "no";
+            var last_sound_level = "NA";
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // 0 = 'Tone' button pressed, heard tone
+                response_type = "hit";
+                switch_block = "yes";
+                end_frequency = "yes";
+            } 
+            console.log("adding data to last trial");
+            var data_to_add = $.extend({}, {response_type: response_type, ITI: current_ITI, switch_block: switch_block, end_frequency: end_frequency, last_sound_level: last_sound_level}, trial_data_all[i].trial_data[sound_number_2]);
+            jsPsych.data.addDataToLastTrial(data_to_add);
+            // new ITI
+            current_ITI = Math.floor(Math.random()*rand_ITI)+min_ITI;
+            // update the sound and trial numbers
+            // second block, so play every sound in increasing order (5 dB difference)
+            if (data.button_pressed === 0 && data.rt <= rt_limit) { // heard tone, reset counters and switch to next frequency
+                var previous_data = jsPsych.data.getTrialsOfType('button-response');
+                last_sound_level = previous_data[previous_data.length-1].dbReduction;
+                console.log("last sound level: ", last_sound_level);
+                jsPsych.data.addDataToLastTrial({last_sound_level: last_sound_level});
+                sound_number_1 = 0;
+                trial_counter_1 = 0;
+                sound_number_2 = trial_data_all[i].trial_data.length-1;
+                trial_counter_2 = trial_data_all[i].trial_data.length-1;
+            } else {
+                if ((sound_number_2-1) >= 0) { // didn't hear tone, increase by 5 dB (unless at highest level)
+                    sound_number_2-=1;
+                }
+            }
+        };
+        return incOnFinish;
+    }
+
+    // function for accessing data by key-value pairs
+    function getTrialsByKeyValue(data, key, value) {
+        data = flatten(data);
+        var trials = [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i][key] == value) {
+                trials.push(data[i]);
+            }
+        }
+        return trials;
+    }
+
+    function add(a, b) {
+        return a + b;
+    }
+
+    // define debrief screen
+    var debrief_block = {
+        type: "text",
+        text: function() {
+            var all_data = jsPsych.data.getData();
+            var switch_data = getTrialsByKeyValue(all_data,"switch_block","yes");
+            // get unique frequencies from the data
+            var frequencies_arr = [];
+            var frequencies_obj = {};
+            for (var i in switch_data) {
+                if (typeof(frequencies_obj[switch_data[i].frequency]) == "undefined") {
+                    frequencies_arr.push(switch_data[i].frequency);
+                }
+                frequencies_obj[switch_data[i].frequency] = 0;
+            }
+            // get -dB values at all reversals by frequency
+            var summary_arr = [];
+            for (var j = 0; j < frequencies_arr.length; j++) {
+                var freq_data = getTrialsByKeyValue(switch_data, "frequency", frequencies_arr[j].toString());
+                var switch_levels = freq_data.map(function (obj) {return obj.last_sound_level;});
+                var sum_of_levels = switch_levels.reduce(add,0);
+                var mean_of_levels = sum_of_levels/switch_levels.length;
+                var max_of_levels = Math.max.apply(Math, switch_levels);
+                var min_of_levels = Math.min.apply(Math, switch_levels);
+                summary_arr.push({frequency: frequencies_arr[j], switch_levels: switch_levels, mean_of_levels: mean_of_levels, max_of_levels: max_of_levels, min_of_levels: min_of_levels});
+            }
+            var debrief_html_text = "<p>Thanks! Here are your results.</p>";
+            for (var k = 0; k < summary_arr.length; k++) {
+                var text = "<p><strong>" + summary_arr[k].frequency + " Hz</strong><br>Maximum reversal level: " + summary_arr[k].max_of_levels + " -dB<br>Minimum reversal level: " + summary_arr[k].min_of_levels + " -dB<br>Mean reversal level: " + summary_arr[k].mean_of_levels + " -dB<br></p>";
+                debrief_html_text += text;
+            }
+            debrief_html_text += "<p>Press any key to end the study.</p>";
+            // debrief_html_text = "<p>Number of switches is " + switch_data.length + ".<br><br>Press any key to finish the experiment.</p>";
+            return debrief_html_text;
+        }
+    };
+    timeline.push(debrief_block);
+
+    // preload audio files manually (necessary because not playing the files with the jsPsych audio plugin), 
+    // then start experiment when files are finished loading
+    var sound_files = [];
+    for (var freq_obj=0; freq_obj < trial_data_all.length; freq_obj++) {
+        for (var trial=0; trial < trial_data_all[freq_obj].trial_data.length; trial++) {
+            var sound_file_name = [file_path, trial_data_all[freq_obj].trial_data[trial].fileName].join("");
+            console.log("sound file added: ", sound_file_name);
+            sound_files.push(sound_file_name);
+        }
+    }
+    console.log("sound file list: ", sound_files);
+    jsPsych.pluginAPI.preloadAudioFiles(sound_files, function(){startExperiment();}, function(){console.log("loading...");});
+
+    function startExperiment() {
+        jsPsych.init({
+            timeline: timeline,
+            fullscreen: true,
+            default_iti: 0,
+            show_progress_bar: false,
+            on_finish: function() {
+                var resultJson = JSON.stringify(jsPsych.data.getData());
+                jatos.submitResultData(resultJson, jatos.startNextComponent);
+            }
+        });
+    }
+});
+</script>
+</html>
